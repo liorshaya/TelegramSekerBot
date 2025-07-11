@@ -31,12 +31,14 @@ public class MyBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         Long chatId = update.getMessage().getChatId();
+        String firstName = update.getMessage().getFrom().getFirstName();
+        String lastName = update.getMessage().getFrom().getLastName();
         System.out.println("HERE1");
         if (!userManager.isUserExists(chatId)){
             System.out.println("HERE2");
             userManager.addUser(chatId);
 
-            sendNewMemberJoin(update.getMessage().getFrom().getFirstName(),update.getMessage().getFrom().getLastName());
+            sendNewMemberJoin(firstName,lastName);
         }
     }
 
