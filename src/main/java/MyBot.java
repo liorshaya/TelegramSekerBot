@@ -46,13 +46,18 @@ public class MyBot extends TelegramLongPollingBot {
         String text = "חבר חדש בקהילה! " + "\n" +
                 "ברוכים הבאים ל " + firstName + " " + lastName + "!" + "\n" +
                 "עכשיו גדלנו ל- " + userManager.getNumberOfUsers() + " משתמשים!";
-
-        for (Long chatId : userManager.getAllUsers()){
-            sendAllMessage(chatId, text);
-        }
+//        for (Long chatId : userManager.getAllUsers()){
+//            sendAllMessage(chatId, text);
+//        }
+        broadcastMessage(text);
 
     }
 
+    public void broadcastMessage(String text) {
+        for (Long chatId : userManager.getAllUsers()) {
+            sendAllMessage(chatId, text);
+        }
+    }
 
     private void sendAllMessage(Long chatId, String text) {
         SendMessage message = new SendMessage();
