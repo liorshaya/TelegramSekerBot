@@ -7,6 +7,7 @@ public class Main {
     public static void main(String[] args) {
 
         try {
+            MyBot myBot = new MyBot();
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(myBot);
 

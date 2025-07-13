@@ -26,7 +26,6 @@ public class MyBot extends TelegramLongPollingBot {
         return Constant.BOT_USERNAME;
     }
 
-
     @Override
     public void onUpdateReceived(Update update) {
         Long chatId = update.getMessage().getChatId();
@@ -43,20 +42,17 @@ public class MyBot extends TelegramLongPollingBot {
         String text = "חבר חדש בקהילה! " + "\n" +
                 "ברוכים הבאים ל " + firstName + " " + lastName + "!" + "\n" +
                 "עכשיו גדלנו ל- " + userManager.getNumberOfUsers() + " משתמשים!";
-//        for (Long chatId : userManager.getAllUsers()){
-//            sendAllMessage(chatId, text);
-//        }
-        broadcastMessage(text);
 
+        broadcastMessage(text);
     }
 
     public void broadcastMessage(String text) {
         for (Long chatId : userManager.getAllUsers()) {
-            sendAllMessage(chatId, text);
+            sendPersonalMessage(chatId, text);
         }
     }
 
-    private void sendAllMessage(Long chatId, String text) {
+    private void sendPersonalMessage(Long chatId, String text) {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText(text);

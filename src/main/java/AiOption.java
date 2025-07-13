@@ -8,12 +8,12 @@ public class AiOption extends JPanel {
         this.setBackground(new Color(0x6565DD));
 
         JLabel header = new JLabel("Enter subject:");
-        header.setBounds(60 , 10 , 150 , 40);
+        header.setBounds(175 , 50 , 150 , 40);
         header.setFont(new Font("Arial", Font.BOLD, 20));
         this.add(header);
 
         JTextField subject = new JTextField();
-        subject.setBounds(50 , 50 , 200 , 40);
+        subject.setBounds(150 , 100 , 200 , 40);
         this.add(subject);
 
         JCheckBox scheduleCheckbox = new JCheckBox("Schedule time?");
@@ -39,6 +39,6 @@ public class AiOption extends JPanel {
         JButton generateButton = new JButton("Send Poll");
         generateButton.setBounds(360, 250, 120, 40);
         this.add(generateButton);
-        
+
     }
 }

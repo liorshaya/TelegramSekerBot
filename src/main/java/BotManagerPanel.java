@@ -12,15 +12,15 @@ public class BotManagerPanel extends JPanel {
         this.setBackground(Color.CYAN);
 
         JLabel header = new JLabel("Create poll with:");
-        header.setBounds(x/2 , 40 , 200 , 50 );
+        header.setBounds(35 , 40 , 200 , 50 );
         header.setFont(new Font("Arial", Font.BOLD, 25));
         this.add(header);
 
         JButton aiPoll = new JButton("AI");
-        aiPoll.setBounds(x/2+50 , 130 , 100 , 50);
+        aiPoll.setBounds(85 , 130 , 100 , 50);
 
         JButton manualPoll = new JButton("Manually");
-        manualPoll.setBounds(x/2+50 , 205 , 100 , 50);
+        manualPoll.setBounds(85 , 205 , 100 , 50);
 
         aiPoll.addActionListener(e -> {
             replaceOptionPanel(new AiOption(0, 0, 300, 200));
@@ -34,17 +34,22 @@ public class BotManagerPanel extends JPanel {
         this.add(manualPoll);
     }
 
-    // פונקציה שמחליפה את הפאנל הנוכחי בחדש
     private void replaceOptionPanel(JPanel newPanel) {
         Container contentPane = parentFrame.getContentPane();
 
         if (currentOptionPanel != null) {
-            contentPane.remove(currentOptionPanel); // הסרה של הישן
+            contentPane.remove(currentOptionPanel);
         }
 
-        newPanel.setBounds(420, 350, 500, 300);
+        // קביעת מיקום וגודל שונה לפי סוג הפאנל
+        if (newPanel instanceof ManualOption) {
+            newPanel.setBounds(350, 300, 600, 350); // גודל גדול יותר
+        } else {
+            newPanel.setBounds(420, 350, 500, 300); // גודל ברירת מחדל
+        }
+
         contentPane.add(newPanel);
-        currentOptionPanel = newPanel; // שמירה
+        currentOptionPanel = newPanel;
         contentPane.revalidate();
         contentPane.repaint();
     }
