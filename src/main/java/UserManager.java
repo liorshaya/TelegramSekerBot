@@ -16,20 +16,15 @@ public class UserManager {
     private Set<Long> users = new HashSet<>();
 
     public UserManager() {
-        System.out.println("userdata");
         File dir = new File(DATA_DIR);
         if (!dir.exists()) {
-            System.out.println("not exist!");
             dir.mkdirs();
-        } else {
-            System.out.println("yes exist!");
         }
 
         File file = new File(FILE_PATH);
         boolean fileExists = file.exists();
 
         if (!fileExists) {
-            System.out.println("file not exist!");
             try (CSVWriter writer = new CSVWriter(new FileWriter(FILE_PATH))) {
                 writer.writeNext(new String[]{"UserID"});
             } catch (IOException e) {

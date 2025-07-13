@@ -7,8 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MyBot extends TelegramLongPollingBot {
-    public static final String BOT_TOKEN = "8015288522:AAEPcTr6voCYh_00iWqCe1mFPyXvlmn0STM";
-    public static final String BOT_USERNAME = "LNSeker_BOT";
+
 
     private static final String DATA_DIR = "src/data/";
     private static final String FILE_PATH = DATA_DIR + "users.csv";
@@ -19,12 +18,12 @@ public class MyBot extends TelegramLongPollingBot {
 
 
     public String getBotToken(){
-        return BOT_TOKEN;
+        return Constant.BOT_TOKEN;
     }
 
     @Override
     public String getBotUsername() {
-        return BOT_USERNAME;
+        return Constant.BOT_USERNAME;
     }
 
 
@@ -33,9 +32,7 @@ public class MyBot extends TelegramLongPollingBot {
         Long chatId = update.getMessage().getChatId();
         String firstName = update.getMessage().getFrom().getFirstName();
         String lastName = update.getMessage().getFrom().getLastName();
-        System.out.println("HERE1");
         if (!userManager.isUserExists(chatId)){
-            System.out.println("HERE2");
             userManager.addUser(chatId);
 
             sendNewMemberJoin(firstName,lastName);
