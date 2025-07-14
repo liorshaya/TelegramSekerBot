@@ -1,163 +1,134 @@
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ManualOption extends JPanel {
+    private final List<JTextField> questionFields = new ArrayList<>();
+    private final List<List<JTextField>> optionFields = new ArrayList<>();
+    private final JCheckBox scheduleCheckbox;
+    private final JSpinner timeSpinner;
+
     public ManualOption(int x, int y, int width, int height) {
         setLayout(null);
         setBounds(x, y, width, height);
         setBackground(Color.ORANGE);
 
-//Question1
-        JLabel label = new JLabel("Question 1:");
-        label.setBounds(10, 10, 70, 30);
-        add(label);
-
-         JTextField question1 = new JTextField();
-         question1.setBounds(80 , 10 , 200 , 25);
-         this.add(question1);
-
-        JLabel labelOptionQ1O1 = new JLabel("Option 1:");
-        labelOptionQ1O1.setBounds(10, 45, 70, 30);
-        add(labelOptionQ1O1);
-
-        JTextField textOptionQ1O1 = new JTextField();
-        textOptionQ1O1.setBounds(80 , 45 , 200 , 25);
-        this.add(textOptionQ1O1);
-
-        JLabel labelOptionQ1O2 = new JLabel("Option 2:");
-        labelOptionQ1O2.setBounds(10, 75, 70, 30);
-        add(labelOptionQ1O2);
-
-        JTextField textOptionQ1O2 = new JTextField();
-        textOptionQ1O2.setBounds(80 , 75 , 200 , 25);
-        this.add(textOptionQ1O2);
-
-        JLabel labelOptionQ1O3 = new JLabel("Option 3:");
-        labelOptionQ1O3.setBounds(10, 105, 70, 30);
-        add(labelOptionQ1O3);
-
-        JTextField textOptionQ1O3 = new JTextField();
-        textOptionQ1O3.setBounds(80 , 105 , 200 , 25);
-        this.add(textOptionQ1O3);
-
-        JLabel labelOptionQ1O4 = new JLabel("Option 4:");
-        labelOptionQ1O4.setBounds(10, 135, 70, 30);
-        add(labelOptionQ1O4);
-
-        JTextField textOptionQ1O4 = new JTextField();
-        textOptionQ1O4.setBounds(80 , 135 , 200 , 25);
-        this.add(textOptionQ1O4);
-//Question1
-
-//Question2
-        JLabel label2 = new JLabel("Question 2:");
-        label2.setBounds(10, 180, 70, 30);
-        add(label2);
-
-        JTextField question2 = new JTextField();
-        question2.setBounds(80 , 180 , 200 , 25);
-        this.add(question2);
-
-        JLabel labelOptionQ2O1 = new JLabel("Option 1:");
-        labelOptionQ2O1.setBounds(10, 215, 70, 30);
-        add(labelOptionQ2O1);
-
-        JTextField textOptionQ2O1 = new JTextField();
-        textOptionQ2O1.setBounds(80 , 215 , 200 , 25);
-        this.add(textOptionQ2O1);
-
-        JLabel labelOptionQ2O2 = new JLabel("Option 2:");
-        labelOptionQ2O2.setBounds(10, 245, 70, 30);
-        add(labelOptionQ2O2);
-
-        JTextField textOptionQ2O2 = new JTextField();
-        textOptionQ2O2.setBounds(80 , 245 , 200 , 25);
-        this.add(textOptionQ2O2);
-
-        JLabel labelOptionQ2O3 = new JLabel("Option 3:");
-        labelOptionQ2O3.setBounds(10, 275, 70, 30);
-        add(labelOptionQ2O3);
-
-        JTextField textOptionQ2O3 = new JTextField();
-        textOptionQ2O3.setBounds(80 , 275 , 200 , 25);
-        this.add(textOptionQ2O3);
-
-        JLabel labelOptionQ2O4 = new JLabel("Option 4:");
-        labelOptionQ2O4.setBounds(10, 305, 70, 30);
-        add(labelOptionQ2O4);
-
-        JTextField textOptionQ2O4 = new JTextField();
-        textOptionQ2O4.setBounds(80 , 305 , 200 , 25);
-        this.add(textOptionQ2O4);
-//Question2
-
-//Question3
-        JLabel label3 = new JLabel("Question 3:");
-        label3.setBounds(300, 10, 70, 30);
-        add(label3);
-
-        JTextField question3 = new JTextField();
-        question3.setBounds(370 , 10 , 200 , 25);
-        this.add(question3);
-
-        JLabel labelOptionQ3O1 = new JLabel("Option 1:");
-        labelOptionQ3O1.setBounds(300, 45, 70, 30);
-        add(labelOptionQ3O1);
-
-        JTextField textOptionQ3O1 = new JTextField();
-        textOptionQ3O1.setBounds(370 , 45 , 200 , 25);
-        this.add(textOptionQ3O1);
-
-        JLabel labelOptionQ3O2 = new JLabel("Option 2:");
-        labelOptionQ3O2.setBounds(300, 75, 70, 30);
-        add(labelOptionQ3O2);
-
-        JTextField textOptionQ3O2 = new JTextField();
-        textOptionQ3O2.setBounds(370 , 75 , 200 , 25);
-        this.add(textOptionQ3O2);
-
-        JLabel labelOptionQ3O3 = new JLabel("Option 3:");
-        labelOptionQ3O3.setBounds(300, 105, 70, 30);
-        add(labelOptionQ3O3);
-
-        JTextField textOptionQ3O3 = new JTextField();
-        textOptionQ3O3.setBounds(370 , 105 , 200 , 25);
-        this.add(textOptionQ3O3);
-
-        JLabel labelOptionQ3O4 = new JLabel("Option 4:");
-        labelOptionQ3O4.setBounds(300, 135, 70, 30);
-        add(labelOptionQ3O4);
-
-        JTextField textOptionQ3O4 = new JTextField();
-        textOptionQ3O4.setBounds(370 , 135 , 200 , 25);
-        this.add(textOptionQ3O4);
-//Question3
-
+        createQuestionBlock(1, 10, 10);
+        createQuestionBlock(2, 10, 180);
+        createQuestionBlock(3, 300, 10);
 
         JButton generateButton = new JButton("Send Poll");
         generateButton.setBounds(460, 300, 120, 40);
         this.add(generateButton);
 
-
-        JCheckBox scheduleCheckbox = new JCheckBox("Schedule time?");
-        scheduleCheckbox.setBounds(300, 250, 150, 40);
+        scheduleCheckbox = new JCheckBox("Schedule time?");
+        scheduleCheckbox.setBounds(310, 250, 150, 40);
         this.add(scheduleCheckbox);
 
-
-        JSpinner timeSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 60, 1));
-        timeSpinner.setBounds(460, 250, 80, 40);
+        timeSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 60, 1));
+        timeSpinner.setBounds(470, 250, 80, 40);
         timeSpinner.setEnabled(false);
         this.add(timeSpinner);
 
-        JLabel minLable = new JLabel("Minuets");
-        minLable.setBounds(550, 250, 50, 40);
-        minLable.setVisible(false);
-        this.add(minLable);
+        JLabel minLabel = new JLabel("Minutes");
+        minLabel.setBounds(553, 250, 50, 40);
+        minLabel.setVisible(false);
+        this.add(minLabel);
 
         scheduleCheckbox.addActionListener(e -> {
             timeSpinner.setEnabled(scheduleCheckbox.isSelected());
-            minLable.setVisible(scheduleCheckbox.isSelected());
+            minLabel.setVisible(scheduleCheckbox.isSelected());
+        });
+
+        generateButton.addActionListener(e -> {
+            String csvData = buildPollTextFromInput();
+            if (csvData != null) {
+                int minutes = scheduleCheckbox.isSelected() ? (int) timeSpinner.getValue() : 0;
+                new PollManager().addPollWithQuestions(csvData, minutes);
+                JOptionPane.showMessageDialog(this, "✅ Poll sent successfully!");
+            }
         });
     }
-}
 
+    private void createQuestionBlock(int number, int x, int y) {
+        JLabel label = new JLabel("Question " + number + ":");
+        label.setBounds(x, y, 70, 30);
+        add(label);
+
+        JTextField question = new JTextField();
+        question.setBounds(x + 70, y, 200, 25);
+        add(question);
+        questionFields.add(question);
+
+        List<JTextField> options = new ArrayList<>();
+
+        for (int i = 0; i < 4; i++) {
+            JLabel optionLabel = new JLabel("Option " + (i + 1) + ":");
+            optionLabel.setBounds(x, y + 32 * (i + 1), 70, 30);
+            add(optionLabel);
+
+            JTextField optionField = new JTextField();
+            optionField.setBounds(x + 70, y + 32 * (i + 1), 200, 25);
+            add(optionField);
+            options.add(optionField);
+        }
+
+        optionFields.add(options);
+    }
+
+    private String buildPollTextFromInput() {
+        StringBuilder result = new StringBuilder();
+        boolean hasAtLeastOneValidQuestion = false;
+
+        for (int i = 0; i < questionFields.size(); i++) {
+            String question = questionFields.get(i).getText().trim();
+            List<JTextField> options = optionFields.get(i);
+            String[] answers = new String[4]; // נשמור תמיד 4 אופציות
+
+            int filledCount = 0;
+            for (int j = 0; j < 4; j++) {
+                String text = options.get(j).getText().trim();
+                if (!text.isEmpty()) {
+                    // בדיקה: אסור למלא את תשובה 3 בלי למלא 1 ו־2
+                    if (j > 0 && answers[j - 1] == null) {
+                        JOptionPane.showMessageDialog(this,
+                                "❌ Please fill options in order for Question " + (i + 1) +
+                                        ". You cannot skip to Option " + (j + 1) + " without filling previous ones.");
+                        return null;
+                    }
+                    answers[j] = text;
+                    filledCount++;
+                } else {
+                    answers[j] = ""; // חובה לשמור פסיק אפילו אם ריק
+                }
+            }
+
+            if (!question.isEmpty()) {
+                if (filledCount < 2) {
+                    JOptionPane.showMessageDialog(this,
+                            "❌ Question " + (i + 1) + " must have at least 2 options.");
+                    return null;
+                }
+                hasAtLeastOneValidQuestion = true;
+                result.append(question);
+                for (String ans : answers) {
+                    result.append(",").append(ans);
+                }
+                result.append("\n");
+            } else if (filledCount > 0) {
+                JOptionPane.showMessageDialog(this,
+                        "❌ You entered options for Question " + (i + 1) + " but no question!");
+                return null;
+            }
+        }
+
+        if (!hasAtLeastOneValidQuestion) {
+            JOptionPane.showMessageDialog(this, "❌ You must enter at least one valid question.");
+            return null;
+        }
+
+        return result.toString();
+    }
+}

@@ -3,9 +3,11 @@ import java.awt.*;
 
 public class BotManagerPanel extends JPanel {
     private JFrame parentFrame;
-    private JPanel currentOptionPanel = null; // נשמור את הפאנל הפעיל
+    private JPanel currentOptionPanel = null;
 
     public BotManagerPanel(JFrame parentFrame ,int x, int y, int width, int height){
+        PollsCsvManager pollsCsvManager = new PollsCsvManager();
+
         this.parentFrame = parentFrame;
         this.setBounds(x, y, width, height);
         this.setLayout(null);
@@ -23,10 +25,28 @@ public class BotManagerPanel extends JPanel {
         manualPoll.setBounds(85 , 205 , 100 , 50);
 
         aiPoll.addActionListener(e -> {
+            if (pollsCsvManager.hasOpenPolls()){
+                JOptionPane.showMessageDialog(
+                        null,
+                        "There is already an open poll.",
+                        "Open Poll Detected",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
             replaceOptionPanel(new AiOption(0, 0, 300, 200));
         });
 
         manualPoll.addActionListener(e -> {
+            if (pollsCsvManager.hasOpenPolls()){
+                JOptionPane.showMessageDialog(
+                        null,
+                        "There is already an open poll.",
+                        "Open Poll Detected",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
             replaceOptionPanel(new ManualOption(0, 0, 300, 200));
         });
 
@@ -41,11 +61,10 @@ public class BotManagerPanel extends JPanel {
             contentPane.remove(currentOptionPanel);
         }
 
-        // קביעת מיקום וגודל שונה לפי סוג הפאנל
         if (newPanel instanceof ManualOption) {
-            newPanel.setBounds(350, 300, 600, 350); // גודל גדול יותר
+            newPanel.setBounds(350, 300, 600, 350);
         } else {
-            newPanel.setBounds(420, 350, 500, 300); // גודל ברירת מחדל
+            newPanel.setBounds(420, 350, 500, 300);
         }
 
         contentPane.add(newPanel);
