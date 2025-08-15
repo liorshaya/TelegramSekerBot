@@ -1,3 +1,5 @@
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
@@ -10,7 +12,12 @@ public class ManualOption extends JPanel {
     private final JCheckBox scheduleCheckbox;
     private final JSpinner timeSpinner;
 
-    public ManualOption(int x, int y, int width, int height) {
+    UserManager userManager = new UserManager();
+    PollsCsvManager pollsCsvManager = new PollsCsvManager();
+    private final TelegramLongPollingBot bot;
+
+    public ManualOption(int x, int y, int width, int height, TelegramLongPollingBot bot) {
+        this.bot = bot;
         setLayout(null);
         setBounds(x, y, width, height);
         setBackground(Color.ORANGE);
@@ -46,7 +53,8 @@ public class ManualOption extends JPanel {
             String csvData = buildPollTextFromInput();
             if (csvData != null && !pollsCsvManager.hasOpenPolls() && userManager.getNumberOfUsers() >= 3) {
                 int minutes = scheduleCheckbox.isSelected() ? (int) timeSpinner.getValue() : 0;
-                new PollManager().addPollWithQuestions(csvData, minutes);
+                System.out.println(csvData);
+                new PollManager().addPollWithQuestions(csvData, minutes, bot, userManager);
                 JOptionPane.showMessageDialog(this, "✅ Poll sent successfully!");
                 this.setVisible(false);
             } else {

@@ -34,7 +34,7 @@ public class MyBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        System.out.println(pollManager.getPollById(5));
+//        System.out.println(pollManager.getPollById(5));
         Long chatId = update.getMessage().getChatId();
         String firstName = update.getMessage().getFrom().getFirstName();
         String lastName = update.getMessage().getFrom().getLastName();

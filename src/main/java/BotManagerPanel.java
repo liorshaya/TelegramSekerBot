@@ -51,7 +51,7 @@ public class BotManagerPanel extends JPanel {
                 );
                 return;
             }
-            replaceOptionPanel(new ManualOption(0, 0, 300, 200));
+            replaceOptionPanel(new ManualOption(0, 0, 300, 200, bot));
         });
 
         this.add(aiPoll);

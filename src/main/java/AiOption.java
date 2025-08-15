@@ -4,7 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class AiOption extends JPanel {
-     UserManager userManager = new UserManager();
+    //UserManager userManager = new UserManager();
+     //PollsCsvManager pollsCsvManager = new PollsCsvManager();
+    private final UserManager userManager;
+    private final PollsCsvManager pollsCsvManager;
+    private final TelegramLongPollingBot bot;
 
     public AiOption(int x, int y, int width, int height, TelegramLongPollingBot bot){
         this.setBounds(x, y, width, height);
@@ -47,12 +51,9 @@ public class AiOption extends JPanel {
         JButton generateButton = new JButton("Send Poll");
         generateButton.addActionListener((e) -> {
             String subjectText = subject.getText();
-            if (userManager.getNumberOfUsers() >= 3){
-                if (scheduleCheckbox.isSelected()){
-                    ApiManager.ApiRequestGetMessage(subjectText, (int) timeSpinner.getValue());
-                } else {
-                    ApiManager.ApiRequestGetMessage(subjectText, 0);
-                }
+            if (userManager.getNumberOfUsers() >= 3 && !pollsCsvManager.hasOpenPolls()){
+                int minutes = scheduleCheckbox.isSelected() ? (int) timeSpinner.getValue() : 0;
+                ApiManager.ApiRequestGetMessage(subjectText, minutes, bot, userManager);
                 this.setVisible(false);
             } else {
                 JOptionPane.showMessageDialog(
