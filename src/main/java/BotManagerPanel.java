@@ -1,11 +1,15 @@
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class BotManagerPanel extends JPanel {
     private JFrame parentFrame;
     private JPanel currentOptionPanel = null;
+    private final TelegramLongPollingBot bot;
 
-    public BotManagerPanel(JFrame parentFrame ,int x, int y, int width, int height){
+    public BotManagerPanel(JFrame parentFrame ,int x, int y, int width, int height,TelegramLongPollingBot bot){
+        this.bot = bot;
         PollsCsvManager pollsCsvManager = new PollsCsvManager();
 
         this.parentFrame = parentFrame;
@@ -34,7 +38,7 @@ public class BotManagerPanel extends JPanel {
                 );
                 return;
             }
-            replaceOptionPanel(new AiOption(0, 0, 300, 200));
+            replaceOptionPanel(new AiOption(0, 0, 300, 200,bot));
         });
 
         manualPoll.addActionListener(e -> {

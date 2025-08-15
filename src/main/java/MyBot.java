@@ -1,4 +1,5 @@
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.polls.SendPoll;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -11,6 +12,7 @@ public class MyBot extends TelegramLongPollingBot {
 
     private static final String DATA_DIR = "src/data/";
     private static final String FILE_PATH = DATA_DIR + "users.csv";
+
 
     private Map<Long, UserState> userStates = new HashMap<>();
 
@@ -40,6 +42,12 @@ public class MyBot extends TelegramLongPollingBot {
             userManager.addUser(chatId);
             sendNewMemberJoin(firstName,lastName);
         }
+
+
+
+        SendPoll poll = new SendPoll();
+        poll.setChatId(chatId.toString());
+
     }
 
     private void sendNewMemberJoin(String firstName,String lastName){

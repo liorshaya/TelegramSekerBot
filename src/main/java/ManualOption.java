@@ -44,10 +44,14 @@ public class ManualOption extends JPanel {
 
         generateButton.addActionListener(e -> {
             String csvData = buildPollTextFromInput();
-            if (csvData != null) {
+            if (csvData != null && !pollsCsvManager.hasOpenPolls() && userManager.getNumberOfUsers() >= 3) {
                 int minutes = scheduleCheckbox.isSelected() ? (int) timeSpinner.getValue() : 0;
                 new PollManager().addPollWithQuestions(csvData, minutes);
                 JOptionPane.showMessageDialog(this, "✅ Poll sent successfully!");
+                this.setVisible(false);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "❌ Cannot send new poll: less then 3 users.");
             }
         });
     }

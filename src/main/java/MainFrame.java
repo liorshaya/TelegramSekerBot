@@ -9,7 +9,7 @@ public class MainFrame extends JFrame {
         setLayout(null);
         setTitle("Telegram Bot Manager");
 
-        BotManagerPanel botManagerPanel = new BotManagerPanel(this,20, 350, 300, 300);
+        BotManagerPanel botManagerPanel = new BotManagerPanel(this,20, 350, 300, 300, myBot);
         this.add(botManagerPanel);
 
         setVisible(true);

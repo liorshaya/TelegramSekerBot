@@ -129,6 +129,44 @@ public class PollsCsvManager {
         }
     }
 
+    public boolean checkAndActivateScheduledPoll() {
+        File inputFile = new File("src/data/polls.csv");
+        File tempFile = new File("src/data/polls_temp.csv");
+
+        boolean activated = false;
+        long currentTimeMillis = System.currentTimeMillis();
+
+        try (CSVReader reader = new CSVReader(new FileReader(inputFile));
+             CSVWriter writer = new CSVWriter(new FileWriter(tempFile))) {
+
+            String[] header = reader.readNext();
+            writer.writeNext(header);
+
+            String[] row;
+            while ((row = reader.readNext()) != null) {
+                if (row.length >= 4) {
+                    String status = row[2].trim().replace("\"", "");
+                    long scheduledTime = Long.parseLong(row[3].trim());
+
+                    if (status.equals("WAITING") && currentTimeMillis >= scheduledTime) {
+                        row[2] = "ACTIVE";
+                        activated = true;
+                    }
+                }
+                writer.writeNext(row);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if (!inputFile.delete() || !tempFile.renameTo(inputFile)) {
+            System.out.println("⚠️ Failed to replace polls.csv with updated version.");
+        }
+
+        return activated;
+    }
+
     public boolean hasOpenPolls() {
         try (CSVReader reader = new CSVReader(new FileReader(POLLS_PATH))) {
             reader.readNext();
@@ -142,6 +180,68 @@ public class PollsCsvManager {
                 }
             }
         } catch (IOException | CsvValidationException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public void activatePollById(int targetPollId) {
+        File file = new File("src/data/polls.csv");
+        List<String[]> rows = new ArrayList<>();
+
+        try (CSVReader reader = new CSVReader(new FileReader(file))) {
+            String[] header = reader.readNext();
+            rows.add(header);
+            String[] row;
+
+            while ((row = reader.readNext()) != null) {
+                if (row.length >= 3 && row[0].replace("\"", "").trim().equals(String.valueOf(targetPollId))) {
+                    row[2] = "ACTIVE";
+                }
+                rows.add(row);
+            }
+        } catch (IOException | CsvValidationException e) {
+            e.printStackTrace();
+        }
+
+        try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
+            writer.writeAll(rows);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int getActivePollId() {
+        try (CSVReader reader = new CSVReader(new FileReader("src/data/polls.csv"))) {
+            reader.readNext();
+            String[] row;
+            while ((row = reader.readNext()) != null) {
+                if (row.length >= 3) {
+                    String status = row[2].trim().replace("\"", "");
+                    if (status.equalsIgnoreCase("ACTIVE")) {
+                        return Integer.parseInt(row[0].replace("\"", "").trim());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public boolean hasWaitingPoll() {
+        try (CSVReader reader = new CSVReader(new FileReader("src/data/polls.csv"))) {
+            reader.readNext();
+            String[] row;
+            while ((row = reader.readNext()) != null) {
+                if (row.length >= 3) {
+                    String status = row[2].trim().replace("\"", "");
+                    if (status.equalsIgnoreCase("WAITING")) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;

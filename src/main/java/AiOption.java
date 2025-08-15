@@ -1,13 +1,19 @@
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class AiOption extends JPanel {
      UserManager userManager = new UserManager();
 
-    public AiOption(int x, int y, int width, int height){
+    public AiOption(int x, int y, int width, int height, TelegramLongPollingBot bot){
         this.setBounds(x, y, width, height);
         this.setLayout(null);
         this.setBackground(new Color(0x6565DD));
+
+        this.bot = bot;
+        this.userManager = new UserManager();
+        this.pollsCsvManager = new PollsCsvManager();
 
         JLabel header = new JLabel("Enter subject:");
         header.setBounds(175 , 50 , 150 , 40);
