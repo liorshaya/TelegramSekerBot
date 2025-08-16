@@ -11,9 +11,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+
 public class PollManager {
     private static final String DATA_DIR = "src/data/";
     private static final String FILE_PATH = DATA_DIR + "questions.csv";
+
+    PollMapCsvManager pollMapManager = new PollMapCsvManager();
 
 
     public PollManager() {
@@ -111,7 +114,6 @@ public class PollManager {
             throw new RuntimeException(e);
         }
 
-
         PollsCsvManager pollCsvManager = new PollsCsvManager();
         int activePollId = pollCsvManager.getActivePollId();
 
@@ -121,23 +123,27 @@ public class PollManager {
         }
 
         Map<String, List<String>> pollQuestions = new LinkedHashMap<>();
+        Map<String, String> questionTextToId = new HashMap<>(); // 🆕 מיפוי טקסט שאלה → מזהה
 
         try (CSVReader reader = new CSVReader(new FileReader("src/data/questions.csv"))) {
-            reader.readNext();
+            reader.readNext(); // דילוג על כותרות
             String[] row;
 
             while ((row = reader.readNext()) != null) {
                 if (row.length >= 7 && row[6].trim().equals(String.valueOf(activePollId))) {
-                    System.out.println("row: " + row);
-                    String question = row[1].trim();
+                    String questionId = row[0].trim();
+                    String questionText = row[1].trim();
+
                     List<String> options = new ArrayList<>();
                     for (int i = 2; i <= 5; i++) {
                         if (row[i] != null && !row[i].trim().isEmpty()) {
                             options.add(row[i].trim());
                         }
                     }
+
                     if (options.size() >= 2) {
-                        pollQuestions.put(question, options);
+                        pollQuestions.put(questionText, options);
+                        questionTextToId.put(questionText, questionId); // 🆕 מיפוי מזהה
                     }
                 }
             }
@@ -151,6 +157,8 @@ public class PollManager {
             System.out.println("שאלה: " + entry.getKey());
             System.out.println("אפשרויות: " + entry.getValue());
         }
+
+//        PollMapCsvManager pollMapManager = new PollMapCsvManager(); // 🆕 מנהל מיפויים
 
         for (Long userId : userManager.getAllUsers()) {
             System.out.println("➡ " + userId);
@@ -172,8 +180,14 @@ public class PollManager {
                     System.out.println("שאלה: " + entry.getKey());
                     System.out.println("אפשרויות: " + entry.getValue());
 
-                    bot.execute(poll);
+                    Message message = bot.execute(poll);
+                    String telegramPollId = message.getPoll().getId();
 
+                    // 🆕 שמירת המיפוי לקובץ
+                    String questionId = questionTextToId.get(entry.getKey());
+                    if (questionId != null) {
+                        pollMapManager.saveMapping(telegramPollId, questionId);
+                    }
 
                     Thread.sleep(1000);
                 }
@@ -183,6 +197,7 @@ public class PollManager {
             }
         }
     }
+
 
 
 
@@ -211,5 +226,24 @@ public class PollManager {
         }
         return "❌ לא נמצאה שאלה עם ID " + targetId;
     }
+
+
+    public int getPollIdFromQuestionId(String questionId) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/data/questions.csv"))) {
+            reader.readLine(); // דלג על כותרת
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 7 && parts[0].replace("\"", "").trim().equals(questionId)) {
+                    String pollIdStr = parts[6].replace("\"", "").trim(); // עמודה 6 זה PollId
+                    return Integer.parseInt(pollIdStr);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
 
 }

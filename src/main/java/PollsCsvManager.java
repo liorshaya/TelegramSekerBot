@@ -30,10 +30,13 @@ public class PollsCsvManager {
         updatePollStatuses();
     }
 
-    public void updatePollStatuses() {
+    public synchronized void updatePollStatuses() {
         List<String[]> updatedRows = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
+
+        UserManager userManager = new UserManager(); // יוצרים פעם אחת
+        PollValidator pollValidator = new PollValidator(userManager);
 
         try (CSVReader reader = new CSVReader(new FileReader(POLLS_PATH))) {
             String[] header = reader.readNext();
@@ -44,26 +47,35 @@ public class PollsCsvManager {
             String[] row;
             while ((row = reader.readNext()) != null) {
                 if (row.length >= 3) {
-                    String timeStr = row[1].trim().replace("\"", "");
+                    String pollIdStr = row[0].replace("\"", "").trim();
+                    String timeStr = row[1].replace("\"", "").trim();
+                    String currentStatus = row[2].replace("\"", "").trim();
+
+                    int pollId = Integer.parseInt(pollIdStr);
                     LocalDateTime pollTime = LocalDateTime.parse(timeStr, formatter);
 
-                    // קביעת סטטוס
-                    String status;
-                    if (now.isBefore(pollTime)) {
-                        status = "AWAITING";
-                    } else if (now.isAfter(pollTime.plusMinutes(5))) {
-                        status = "DONE";
-                    } else {
-                        status = "ACTIVE";
+                    // אם כבר DONE – לא נוגעים
+                    if (currentStatus.equalsIgnoreCase("DONE")) {
+                        updatedRows.add(row);
+                        continue;
                     }
 
-                    row[2] = status;
+                    // בדיקת זמן
+                    boolean fiveMinutesPassed = now.isAfter(pollTime.plusMinutes(5));
+                    boolean allAnswered = pollValidator.allUsersAnsweredAllQuestions(pollId);
+
+                    if (allAnswered || fiveMinutesPassed) {
+                        row[2] = "DONE";
+                    } else if (now.isBefore(pollTime)) {
+                        row[2] = "AWAITING";
+                    } else {
+                        row[2] = "ACTIVE";
+                    }
                 }
 
                 updatedRows.add(row);
             }
 
-            // כתיבה חזרה לקובץ
             try (CSVWriter writer = new CSVWriter(new FileWriter(POLLS_PATH))) {
                 for (String[] updatedRow : updatedRows) {
                     writer.writeNext(updatedRow);
@@ -74,6 +86,8 @@ public class PollsCsvManager {
             e.printStackTrace();
         }
     }
+
+
 
     public int createPoll(LocalDateTime dateTime) {
         int nextPollId = getNextPollId();
