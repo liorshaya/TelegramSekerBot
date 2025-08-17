@@ -47,34 +47,68 @@ public class VotesCsvManager {
         }
     }
 
-    public synchronized void recordVote(String questionId, int selectedOptionIndex) {
+    public void recordVote(String questionId, int selectedOptionIndex) {
         synchronized (LOCK) {
             File inputFile = new File(FILE_PATH);
-            File tempFile = new File("src/data/temp_votes.csv");
+            File tempFile  = new File(FILE_PATH + ".tmp");
 
-            try (CSVReader reader = new CSVReader(new FileReader(inputFile));
-                 CSVWriter writer = new CSVWriter(new FileWriter(tempFile))) {
+            try (
+                    FileInputStream fis = new FileInputStream(inputFile);
+                    InputStreamReader isr = new InputStreamReader(fis);
+                    CSVReader reader = new CSVReader(isr);
 
+                    FileOutputStream fos = new FileOutputStream(tempFile, false);
+                    OutputStreamWriter osw = new OutputStreamWriter(fos);
+                    CSVWriter writer = new CSVWriter(osw)
+            ) {
                 String[] row;
+                String targetId = clean(questionId);
+
                 while ((row = reader.readNext()) != null) {
-                    if (row.length > 0 && row[0].equals(questionId)) {
-                        if (selectedOptionIndex + 1 < row.length && !row[selectedOptionIndex + 1].isEmpty()) {
-                            int currentCount = Integer.parseInt(row[selectedOptionIndex + 1]);
-                            row[selectedOptionIndex + 1] = String.valueOf(currentCount + 1);
+                    if (row.length > 0 && clean(row[0]).equals(targetId)) {
+                        int col = selectedOptionIndex + 1; // העמודה של המונה (אחרי ה-ID)
+
+                        // הרחבת שורה אם חסרות עמודות
+                        if (col >= row.length) {
+                            String[] extended = new String[col + 1];
+                            System.arraycopy(row, 0, extended, 0, row.length);
+                            for (int i = row.length; i < extended.length; i++) extended[i] = "";
+                            row = extended;
                         }
+
+                        // תא ריק נחשב 0
+                        int current = 0;
+                        if (row[col] != null && !row[col].trim().isEmpty()) {
+                            try { current = Integer.parseInt(clean(row[col])); } catch (NumberFormatException ignored) {}
+                        }
+                        row[col] = String.valueOf(current + 1);
                     }
-                    writer.writeNext(row);
+
+                    // כתיבה בלי הוספת מירכאות מיותרות
+                    writer.writeNext(row, false);
                 }
 
-                writer.flush(); // ⭐ הבטחת כתיבה לדיסק
+                // flush מלא עד לדיסק
+                writer.flush();
+                osw.flush();
+                fos.getFD().sync();
 
-            } catch (IOException | CsvValidationException e) {
+            } catch (IOException | com.opencsv.exceptions.CsvValidationException e) {
                 e.printStackTrace();
+                try { tempFile.delete(); } catch (Exception ignored) {}
                 return;
             }
 
-            if (!inputFile.delete() || !tempFile.renameTo(inputFile)) {
+            // החלפה בטוחה של הקובץ
+            try {
+                java.nio.file.Files.move(
+                        tempFile.toPath(),
+                        inputFile.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                );
+            } catch (IOException e) {
                 System.err.println("⚠️ לא הצלחנו לעדכן את קובץ ההצבעות.");
+                e.printStackTrace();
             }
         }
     }
@@ -82,19 +116,19 @@ public class VotesCsvManager {
     public int getNumberOfVotesForQuestion(String questionId) {
         synchronized (LOCK) {
             int count = 0;
-            try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 2 && parts[0].replace("\"", "").trim().equals(questionId)) {
-                        for (int i = 1; i <= 4 && i < parts.length; i++) {
-                            String part = parts[i].replace("\"", "").trim();
-                            if (!part.isEmpty()) {
-                                try {
-                                    count += Integer.parseInt(part);
-                                } catch (NumberFormatException ignored) {}
+            try (CSVReader reader = new CSVReader(new FileReader(FILE_PATH))) {
+                String[] row;
+                String target = clean(questionId);
+                while ((row = reader.readNext()) != null) {
+                    if (row.length >= 2 && clean(row[0]).equals(target)) {
+                        // נספור עד 4 עמודות ספירה, אם קיימות
+                        for (int i = 1; i < row.length && i <= 4; i++) {
+                            String v = clean(row[i]);
+                            if (!v.isEmpty()) {
+                                try { count += Integer.parseInt(v); } catch (NumberFormatException ignored) {}
                             }
                         }
+                        break;
                     }
                 }
             } catch (Exception e) {
@@ -102,6 +136,10 @@ public class VotesCsvManager {
             }
             return count;
         }
+    }
+
+    private static String clean(String s) {
+        return s == null ? "" : s.replace("\"","").trim();
     }
 
 

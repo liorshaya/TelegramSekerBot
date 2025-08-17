@@ -16,7 +16,8 @@ public class PollManager {
     private static final String DATA_DIR = "src/data/";
     private static final String FILE_PATH = DATA_DIR + "questions.csv";
 
-    PollMapCsvManager pollMapManager = new PollMapCsvManager();
+    private final PollMapCsvManager pollMapManager = new PollMapCsvManager();
+    private final PollsCsvManager pollsCsvManager = new PollsCsvManager();
 
 
     public PollManager() {
@@ -79,7 +80,6 @@ public class PollManager {
             e.printStackTrace();
         }
 
-        // אתחול קובץ ההצבעות (ללא שימוש ב־telegramPollId)
         VotesCsvManager votesCsvManager = new VotesCsvManager();
         votesCsvManager.initializeVotesCsv(createdQuestionIds);
     }
@@ -108,88 +108,98 @@ public class PollManager {
     }
 
     public void sendActivePollToAllUsers(TelegramLongPollingBot bot, UserManager userManager) {
-        try {
-            Thread.sleep(300);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        try { Thread.sleep(300); } catch (InterruptedException ignored) {}
 
-        PollsCsvManager pollCsvManager = new PollsCsvManager();
-        int activePollId = pollCsvManager.getActivePollId();
-
+        // 1) לאתר את הסקר הפעיל
+        int activePollId = pollsCsvManager.getActivePollId();
         if (activePollId == -1) {
             System.out.println("❌ No active poll found.");
             return;
         }
 
-        Map<String, List<String>> pollQuestions = new LinkedHashMap<>();
-        Map<String, String> questionTextToId = new HashMap<>(); // 🆕 מיפוי טקסט שאלה → מזהה
+        // 2) לקרוא את השאלות והאפשרויות של הסקר הפעיל, מיושרות לפי אינדקס
+        List<String> questionIds   = new ArrayList<>();
+        List<String> questionTexts = new ArrayList<>();
+        List<List<String>> questionOptions = new ArrayList<>();
 
         try (CSVReader reader = new CSVReader(new FileReader("src/data/questions.csv"))) {
             reader.readNext(); // דילוג על כותרות
             String[] row;
-
             while ((row = reader.readNext()) != null) {
-                if (row.length >= 7 && row[6].trim().equals(String.valueOf(activePollId))) {
-                    String questionId = row[0].trim();
-                    String questionText = row[1].trim();
+                // מבנה שורה צפוי: [0]=ID, [1]=Q, [2]=A1, [3]=A2, [4]=A3, [5]=A4, [6]=PollId
+                if (row.length >= 7 && row[6] != null && row[6].trim().equals(String.valueOf(activePollId))) {
+                    String qId   = row[0] == null ? "" : row[0].trim().replace("\"", "");
+                    String qText = row[1] == null ? "" : row[1].trim();
 
-                    List<String> options = new ArrayList<>();
+                    List<String> opts = new ArrayList<>(4);
                     for (int i = 2; i <= 5; i++) {
-                        if (row[i] != null && !row[i].trim().isEmpty()) {
-                            options.add(row[i].trim());
+                        if (i < row.length && row[i] != null && !row[i].trim().isEmpty()) {
+                            opts.add(row[i].trim());
                         }
                     }
 
-                    if (options.size() >= 2) {
-                        pollQuestions.put(questionText, options);
-                        questionTextToId.put(questionText, questionId); // 🆕 מיפוי מזהה
+                    // חובה לפחות 2 אפשרויות כדי שסקר טלגרם יישלח
+                    if (!qText.isEmpty() && opts.size() >= 2) {
+                        questionIds.add(qId);
+                        questionTexts.add(qText);
+                        questionOptions.add(opts);
                     }
                 }
             }
         } catch (Exception e) {
+            System.err.println("❌ Failed reading questions.csv");
             e.printStackTrace();
             return;
         }
 
-        System.out.println("🔎 תוכן pollQuestions:");
-        for (Map.Entry<String, List<String>> entry : pollQuestions.entrySet()) {
-            System.out.println("שאלה: " + entry.getKey());
-            System.out.println("אפשרויות: " + entry.getValue());
+        if (questionIds.isEmpty()) {
+            System.out.println("⚠️ לא נמצאו שאלות עבור PollId " + activePollId);
+            return;
         }
 
-//        PollMapCsvManager pollMapManager = new PollMapCsvManager(); // 🆕 מנהל מיפויים
+        // לוג לבדיקה
+        System.out.println("🔎 PollId " + activePollId + " — loaded " + questionIds.size() + " questions");
+        for (int i = 0; i < questionIds.size(); i++) {
+            System.out.println("• QID=" + questionIds.get(i) + " | " + questionTexts.get(i) + " | options=" + questionOptions.get(i));
+        }
 
+        // 3) שליחה לכל המשתמשים + שמירת מיפוי telegramPollId → questionId לכל שליחה
         for (Long userId : userManager.getAllUsers()) {
-            System.out.println("➡ " + userId);
+            System.out.println("➡ sending to user " + userId);
             try {
+                // הודעת פתיח
                 SendMessage intro = new SendMessage();
                 intro.setChatId(userId.toString());
                 intro.setText("📊 סקר חדש מוכן! נשמח לשמוע את דעתך:");
                 bot.execute(intro);
 
-                for (Map.Entry<String, List<String>> entry : pollQuestions.entrySet()) {
+                // כל שאלה כסקר נפרד, באותו סדר
+                for (int i = 0; i < questionIds.size(); i++) {
+                    String qId   = questionIds.get(i);
+                    String qText = questionTexts.get(i);
+                    List<String> opts = questionOptions.get(i);
+
                     SendPoll poll = new SendPoll();
                     poll.setChatId(userId.toString());
-                    poll.setQuestion(entry.getKey());
-                    poll.setOptions(entry.getValue());
+                    poll.setQuestion(qText);
+                    poll.setOptions(opts);
                     poll.setIsAnonymous(false);
                     poll.setAllowMultipleAnswers(false);
 
-                    System.out.println("📤 שולח סקר ל-" + userId);
-                    System.out.println("שאלה: " + entry.getKey());
-                    System.out.println("אפשרויות: " + entry.getValue());
+                    System.out.println("📤 שולח סקר למשתמש " + userId + " | QID=" + qId + " | " + qText + " | " + opts);
 
-                    Message message = bot.execute(poll);
-                    String telegramPollId = message.getPoll().getId();
+                    Message msg = bot.execute(poll);
 
-                    // 🆕 שמירת המיפוי לקובץ
-                    String questionId = questionTextToId.get(entry.getKey());
-                    if (questionId != null) {
-                        pollMapManager.saveMapping(telegramPollId, questionId);
+                    // שמירת המיפוי עבור ההצבעות שיגיעו מהמשתמש הזה
+                    if (msg != null && msg.getPoll() != null) {
+                        String telegramPollId = msg.getPoll().getId();
+                        pollMapManager.saveMapping(telegramPollId, qId);
+                    } else {
+                        System.err.println("⚠️ bot.execute(poll) לא החזיר Poll למשתמש " + userId);
                     }
 
-                    Thread.sleep(1000);
+                    // השהייה קטנה כדי להימנע מ-429
+                    try { Thread.sleep(800); } catch (InterruptedException ignored) {}
                 }
             } catch (Exception ex) {
                 System.err.println("❌ שגיאה בשליחת סקר ל-" + userId);

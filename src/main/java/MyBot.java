@@ -1,5 +1,4 @@
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.polls.SendPoll;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.polls.PollAnswer;
@@ -15,19 +14,19 @@ public class MyBot extends TelegramLongPollingBot {
     private static final String FILE_PATH = DATA_DIR + "users.csv";
 
 
-    private Map<Long, UserState> userStates = new HashMap<>();
+    private final Map<Long, UserState> userStates = new HashMap<>();
 
-    private UserManager userManager = new UserManager();
+    private final UserManager userManager = new UserManager();
 
-    private PollManager pollManager = new PollManager();
+    private final PollManager pollManager = new PollManager();
 
-    private PollsCsvManager pollsCsvManager = new PollsCsvManager();
+    private final PollsCsvManager pollsCsvManager = new PollsCsvManager();
 
-    private PollValidator validator = new PollValidator(userManager);
+    private final PollValidator validator = new PollValidator(userManager);
 
-    private VotesCsvManager votesCsvManager = new VotesCsvManager();
+    private final VotesCsvManager votesCsvManager = new VotesCsvManager();
 
-    private PollMapCsvManager pollMapCsvManager = new PollMapCsvManager();
+    private final PollMapCsvManager pollMapCsvManager = new PollMapCsvManager();
 
 
     public String getBotToken(){
@@ -62,9 +61,6 @@ public class MyBot extends TelegramLongPollingBot {
 
 
 
-        SendPoll poll = new SendPoll();
-        poll.setChatId(chatId.toString());
-
     }
 
     private void sendNewMemberJoin(String firstName,String lastName){
@@ -83,7 +79,7 @@ public class MyBot extends TelegramLongPollingBot {
 
     private void sendPersonalMessage(Long chatId, String text) {
         SendMessage message = new SendMessage();
-        message.setChatId(chatId);
+        message.setChatId(chatId.toString());
         message.setText(text);
 
         try {
@@ -95,33 +91,30 @@ public class MyBot extends TelegramLongPollingBot {
 
     private void handlePollAnswer(PollAnswer pollAnswer) {
         String telegramPollId = pollAnswer.getPollId();
-        int selectedIndex = pollAnswer.getOptionIds().isEmpty() ? -1 : pollAnswer.getOptionIds().get(0);
-        if (selectedIndex == -1) return;
+        if (pollAnswer.getOptionIds() == null || pollAnswer.getOptionIds().isEmpty()) return;
 
-        // שלב 1: מצא את question_id המתאים ל־telegramPollId
-        String questionId = pollMapCsvManager.getQuestionIdByPollId(telegramPollId);
+        int selectedIndex = pollAnswer.getOptionIds().get(0); // single-select
+
+        // ✅ קודם מה-cache (עם המתנה קצרה למקרה שהמשתמש לחץ “מהר מדי”)
+        String questionId = pollMapCsvManager.getFromCacheOrWait(telegramPollId, 1200, 100);
         if (questionId == null) {
-            System.err.println("❌ לא נמצאה התאמה בין telegram_poll_id לשאלה");
+            System.err.println("⚠️ לא נמצא מיפוי ל-pollId=" + telegramPollId + " — דילוג");
             return;
         }
 
-        // שלב 2: מצא את ה־PollId הפנימי (מתוך questions.csv)
-        int questionPollId = pollManager.getPollIdFromQuestionId(questionId);
-        if (questionPollId == -1) {
-            System.err.println("❌ לא נמצא PollId פנימי עבור questionId " + questionId);
-            return;
+        // אימות רך שזו באמת שאלה של הסקר הפעיל
+        int qPollId = pollManager.getPollIdFromQuestionId(questionId);
+        int active  = pollsCsvManager.getActivePollId();
+        if (qPollId != -1 && active != -1 && qPollId != active) {
+            System.out.println("ℹ️ הצבעה לשאלה " + questionId + " שאינה בסקר הפעיל (qPollId=" + qPollId + ", active=" + active + "). ממשיך.");
         }
 
-        // שלב 3: בדוק מהו הפול הפעיל הנוכחי
-        int activePollId = pollsCsvManager.getActivePollId();
-        if (questionPollId != activePollId) {
-            System.err.println("⚠️ התקבלה הצבעה לפול שאינו פעיל: " + questionPollId + " (פעיל כעת: " + activePollId + ")");
-            return;
-        }
-
-        // שלב 4: אשר את ההצבעה
         votesCsvManager.recordVote(questionId, selectedIndex);
-        System.out.println("✅ הצבעה עודכנה: שאלה " + questionId + ", אופציה " + selectedIndex);
+
+        int total = votesCsvManager.getNumberOfVotesForQuestion(questionId);
+        System.out.println("✅ הצבעה עודכנה: שאלה " + questionId + ", אופציה " + selectedIndex + " | סה\"כ קולות: " + total);
+
+        pollsCsvManager.updatePollStatuses();
     }
 
 

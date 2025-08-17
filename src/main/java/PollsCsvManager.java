@@ -27,7 +27,7 @@ public class PollsCsvManager {
                 e.printStackTrace();
             }
         }
-        updatePollStatuses();
+        //updatePollStatuses();
     }
 
     public synchronized void updatePollStatuses() {

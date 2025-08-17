@@ -20,9 +20,7 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-
+        new PollsCsvManager().updatePollStatuses();
 
     }
 }
