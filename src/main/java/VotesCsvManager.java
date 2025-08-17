@@ -66,9 +66,8 @@ public class VotesCsvManager {
 
                 while ((row = reader.readNext()) != null) {
                     if (row.length > 0 && clean(row[0]).equals(targetId)) {
-                        int col = selectedOptionIndex + 1; // העמודה של המונה (אחרי ה-ID)
+                        int col = selectedOptionIndex + 1;
 
-                        // הרחבת שורה אם חסרות עמודות
                         if (col >= row.length) {
                             String[] extended = new String[col + 1];
                             System.arraycopy(row, 0, extended, 0, row.length);
@@ -76,7 +75,6 @@ public class VotesCsvManager {
                             row = extended;
                         }
 
-                        // תא ריק נחשב 0
                         int current = 0;
                         if (row[col] != null && !row[col].trim().isEmpty()) {
                             try { current = Integer.parseInt(clean(row[col])); } catch (NumberFormatException ignored) {}
@@ -84,11 +82,10 @@ public class VotesCsvManager {
                         row[col] = String.valueOf(current + 1);
                     }
 
-                    // כתיבה בלי הוספת מירכאות מיותרות
                     writer.writeNext(row, false);
                 }
 
-                // flush מלא עד לדיסק
+
                 writer.flush();
                 osw.flush();
                 fos.getFD().sync();
@@ -99,7 +96,6 @@ public class VotesCsvManager {
                 return;
             }
 
-            // החלפה בטוחה של הקובץ
             try {
                 java.nio.file.Files.move(
                         tempFile.toPath(),
@@ -121,7 +117,6 @@ public class VotesCsvManager {
                 String target = clean(questionId);
                 while ((row = reader.readNext()) != null) {
                     if (row.length >= 2 && clean(row[0]).equals(target)) {
-                        // נספור עד 4 עמודות ספירה, אם קיימות
                         for (int i = 1; i < row.length && i <= 4; i++) {
                             String v = clean(row[i]);
                             if (!v.isEmpty()) {

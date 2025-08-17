@@ -2,6 +2,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class AiOption extends JPanel {
     //UserManager userManager = new UserManager();
@@ -9,8 +10,9 @@ public class AiOption extends JPanel {
     private final UserManager userManager;
     private final PollsCsvManager pollsCsvManager;
     private final TelegramLongPollingBot bot;
+    private final StatisticsPanel statisticsPanel;
 
-    public AiOption(int x, int y, int width, int height, TelegramLongPollingBot bot){
+    public AiOption(int x, int y, int width, int height, TelegramLongPollingBot bot, StatisticsPanel statisticsPanel){
         this.setBounds(x, y, width, height);
         this.setLayout(null);
         this.setBackground(new Color(0x6565DD));
@@ -18,6 +20,7 @@ public class AiOption extends JPanel {
         this.bot = bot;
         this.userManager = new UserManager();
         this.pollsCsvManager = new PollsCsvManager();
+        this.statisticsPanel = statisticsPanel;
 
         JLabel header = new JLabel("Enter subject:");
         header.setBounds(175 , 50 , 150 , 40);
@@ -54,6 +57,8 @@ public class AiOption extends JPanel {
             if (userManager.getNumberOfUsers() >= 3 && !pollsCsvManager.hasOpenPolls()){
                 int minutes = scheduleCheckbox.isSelected() ? (int) timeSpinner.getValue() : 0;
                 ApiManager.ApiRequestGetMessage(subjectText, minutes, bot, userManager);
+                List<QuestionStats> updatedStats = StatisticsLoader.loadLatestPollStatistics();
+                statisticsPanel.refreshStatistics(updatedStats);
                 this.setVisible(false);
             } else {
                 JOptionPane.showMessageDialog(

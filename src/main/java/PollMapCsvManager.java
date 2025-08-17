@@ -8,7 +8,6 @@ public class PollMapCsvManager {
     private static final String FILE_PATH = "src/data/poll_map.csv";
     private static final Object LOCK = new Object();
 
-    // ✅ Cache בזיכרון כדי לבטל תלות בקריאה מהדיסק בזמן תשובה
     private final ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
 
     public PollMapCsvManager() {
@@ -30,7 +29,7 @@ public class PollMapCsvManager {
     private void loadCache() {
         try (CSVReader r = new CSVReader(new FileReader(FILE_PATH))) {
             String[] row;
-            r.readNext(); // header
+            r.readNext();
             while ((row = r.readNext()) != null) {
                 if (row.length >= 2) {
                     cache.put(clean(row[0]), clean(row[1]));
@@ -41,12 +40,11 @@ public class PollMapCsvManager {
         }
     }
 
-    /** כתיבה גם ל-cache וגם ל-CSV (append+flush) */
     public void saveMapping(String pollId, String questionId) {
         String p = clean(pollId), q = clean(questionId);
         if (p.isEmpty() || q.isEmpty()) return;
 
-        cache.put(p, q); // זמין מיידית ל-handlePollAnswer
+        cache.put(p, q);
 
         synchronized (LOCK) {
             try (FileWriter fw = new FileWriter(FILE_PATH, true);
@@ -60,7 +58,6 @@ public class PollMapCsvManager {
         }
     }
 
-    /** קודם מה-cache; אם עוד לא קיים — ננסה למשוך מהקובץ עם retry קצר */
     public String getFromCacheOrWait(String pollId, long timeoutMs, long stepMs) {
         String key = clean(pollId);
         long end = System.currentTimeMillis() + timeoutMs;
@@ -69,7 +66,6 @@ public class PollMapCsvManager {
             String qid = cache.get(key);
             if (qid != null && !qid.isEmpty()) return qid;
 
-            // fallback חד־פעמי לקובץ
             String fromFile = getQuestionIdByPollId(key);
             if (fromFile != null && !fromFile.isEmpty()) {
                 cache.put(key, fromFile);
@@ -82,13 +78,12 @@ public class PollMapCsvManager {
         return null;
     }
 
-    /** קריאה ישירה מהקובץ (למקרה קצה) */
     public String getQuestionIdByPollId(String pollId) {
         String target = clean(pollId);
         synchronized (LOCK) {
             try (CSVReader r = new CSVReader(new FileReader(FILE_PATH))) {
                 String[] row;
-                r.readNext(); // header
+                r.readNext();
                 while ((row = r.readNext()) != null) {
                     if (row.length >= 2 && clean(row[0]).equals(target)) {
                         return clean(row[1]);

@@ -4,15 +4,17 @@ import javax.swing.*;
 import java.awt.*;
 
 public class BotManagerPanel extends JPanel {
-    private JFrame parentFrame;
+    private final JFrame parentFrame;
+    private final StatisticsPanel statisticsPanel; // ✅ החזק את הפאנל
     private JPanel currentOptionPanel = null;
     private final TelegramLongPollingBot bot;
 
-    public BotManagerPanel(JFrame parentFrame ,int x, int y, int width, int height,TelegramLongPollingBot bot){
+    public BotManagerPanel(JFrame parentFrame, StatisticsPanel statisticsPanel, int x, int y, int width, int height, TelegramLongPollingBot bot) {
+        this.parentFrame = parentFrame;
+        this.statisticsPanel = statisticsPanel;
         this.bot = bot;
         PollsCsvManager pollsCsvManager = new PollsCsvManager();
 
-        this.parentFrame = parentFrame;
         this.setBounds(x, y, width, height);
         this.setLayout(null);
         this.setBackground(Color.CYAN);
@@ -38,7 +40,8 @@ public class BotManagerPanel extends JPanel {
                 );
                 return;
             }
-            replaceOptionPanel(new AiOption(0, 0, 300, 200,bot));
+            replaceOptionPanel(new AiOption(0, 0, 300, 200, bot, statisticsPanel));
+
         });
 
         manualPoll.addActionListener(e -> {
@@ -51,7 +54,8 @@ public class BotManagerPanel extends JPanel {
                 );
                 return;
             }
-            replaceOptionPanel(new ManualOption(0, 0, 300, 200, bot));
+            replaceOptionPanel(new ManualOption(0, 0, 300, 200, bot, statisticsPanel));
+
         });
 
         this.add(aiPoll);

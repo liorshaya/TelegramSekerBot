@@ -37,7 +37,7 @@ public class PollValidator {
     private List<String> getQuestionsByPollId(int pollId) {
         List<String> questionIds = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader("src/data/questions.csv"))) {
-            reader.readLine(); // דילוג על כותרת
+            reader.readLine();
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");

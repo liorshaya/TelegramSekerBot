@@ -56,14 +56,13 @@ public class PollManager {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine().trim();
                 if (!line.isEmpty()) {
-                    String[] parts = line.split(",", -1);  // שמירה גם על שדות ריקים
-                    if (parts.length < 5) continue;         // שאלה + לפחות 2 תשובות
+                    String[] parts = line.split(",", -1);
+                    if (parts.length < 5) continue;
 
-                    String[] fullRow = new String[8];       // בדיוק 7 שדות
-                    fullRow[0] = String.valueOf(nextQuestionId); // questionId
-                    fullRow[1] = parts[0];                       // השאלה
+                    String[] fullRow = new String[8];
+                    fullRow[0] = String.valueOf(nextQuestionId);
+                    fullRow[1] = parts[0];
 
-                    // הכנסת עד 4 תשובות
                     for (int i = 0; i < 4; i++) {
                         fullRow[2 + i] = (i + 1 < parts.length) ? parts[i + 1] : "";
                     }
@@ -117,16 +116,14 @@ public class PollManager {
             return;
         }
 
-        // 2) לקרוא את השאלות והאפשרויות של הסקר הפעיל, מיושרות לפי אינדקס
         List<String> questionIds   = new ArrayList<>();
         List<String> questionTexts = new ArrayList<>();
         List<List<String>> questionOptions = new ArrayList<>();
 
         try (CSVReader reader = new CSVReader(new FileReader("src/data/questions.csv"))) {
-            reader.readNext(); // דילוג על כותרות
+            reader.readNext();
             String[] row;
             while ((row = reader.readNext()) != null) {
-                // מבנה שורה צפוי: [0]=ID, [1]=Q, [2]=A1, [3]=A2, [4]=A3, [5]=A4, [6]=PollId
                 if (row.length >= 7 && row[6] != null && row[6].trim().equals(String.valueOf(activePollId))) {
                     String qId   = row[0] == null ? "" : row[0].trim().replace("\"", "");
                     String qText = row[1] == null ? "" : row[1].trim();
@@ -138,7 +135,6 @@ public class PollManager {
                         }
                     }
 
-                    // חובה לפחות 2 אפשרויות כדי שסקר טלגרם יישלח
                     if (!qText.isEmpty() && opts.size() >= 2) {
                         questionIds.add(qId);
                         questionTexts.add(qText);
@@ -157,23 +153,19 @@ public class PollManager {
             return;
         }
 
-        // לוג לבדיקה
         System.out.println("🔎 PollId " + activePollId + " — loaded " + questionIds.size() + " questions");
         for (int i = 0; i < questionIds.size(); i++) {
             System.out.println("• QID=" + questionIds.get(i) + " | " + questionTexts.get(i) + " | options=" + questionOptions.get(i));
         }
 
-        // 3) שליחה לכל המשתמשים + שמירת מיפוי telegramPollId → questionId לכל שליחה
         for (Long userId : userManager.getAllUsers()) {
             System.out.println("➡ sending to user " + userId);
             try {
-                // הודעת פתיח
                 SendMessage intro = new SendMessage();
                 intro.setChatId(userId.toString());
                 intro.setText("📊 סקר חדש מוכן! נשמח לשמוע את דעתך:");
                 bot.execute(intro);
 
-                // כל שאלה כסקר נפרד, באותו סדר
                 for (int i = 0; i < questionIds.size(); i++) {
                     String qId   = questionIds.get(i);
                     String qText = questionTexts.get(i);
@@ -190,7 +182,6 @@ public class PollManager {
 
                     Message msg = bot.execute(poll);
 
-                    // שמירת המיפוי עבור ההצבעות שיגיעו מהמשתמש הזה
                     if (msg != null && msg.getPoll() != null) {
                         String telegramPollId = msg.getPoll().getId();
                         pollMapManager.saveMapping(telegramPollId, qId);
@@ -198,7 +189,6 @@ public class PollManager {
                         System.err.println("⚠️ bot.execute(poll) לא החזיר Poll למשתמש " + userId);
                     }
 
-                    // השהייה קטנה כדי להימנע מ-429
                     try { Thread.sleep(800); } catch (InterruptedException ignored) {}
                 }
             } catch (Exception ex) {
@@ -240,12 +230,12 @@ public class PollManager {
 
     public int getPollIdFromQuestionId(String questionId) {
         try (BufferedReader reader = new BufferedReader(new FileReader("src/data/questions.csv"))) {
-            reader.readLine(); // דלג על כותרת
+            reader.readLine();
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts.length >= 7 && parts[0].replace("\"", "").trim().equals(questionId)) {
-                    String pollIdStr = parts[6].replace("\"", "").trim(); // עמודה 6 זה PollId
+                    String pollIdStr = parts[6].replace("\"", "").trim();
                     return Integer.parseInt(pollIdStr);
                 }
             }

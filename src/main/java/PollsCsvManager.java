@@ -35,7 +35,7 @@ public class PollsCsvManager {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
 
-        UserManager userManager = new UserManager(); // יוצרים פעם אחת
+        UserManager userManager = new UserManager();
         PollValidator pollValidator = new PollValidator(userManager);
 
         try (CSVReader reader = new CSVReader(new FileReader(POLLS_PATH))) {
@@ -54,13 +54,11 @@ public class PollsCsvManager {
                     int pollId = Integer.parseInt(pollIdStr);
                     LocalDateTime pollTime = LocalDateTime.parse(timeStr, formatter);
 
-                    // אם כבר DONE – לא נוגעים
                     if (currentStatus.equalsIgnoreCase("DONE")) {
                         updatedRows.add(row);
                         continue;
                     }
 
-                    // בדיקת זמן
                     boolean fiveMinutesPassed = now.isAfter(pollTime.plusMinutes(5));
                     boolean allAnswered = pollValidator.allUsersAnsweredAllQuestions(pollId);
 
@@ -107,7 +105,7 @@ public class PollsCsvManager {
     private int getNextPollId() {
         int maxId = 0;
         try (CSVReader reader = new CSVReader(new FileReader(POLLS_PATH))) {
-            reader.readNext(); // skip header
+            reader.readNext();
             String[] row;
             while ((row = reader.readNext()) != null) {
                 if (row.length > 0) {
@@ -260,4 +258,59 @@ public class PollsCsvManager {
         }
         return false;
     }
+
+    public String getPollStatus(int pollId) {
+        try (CSVReader reader = new CSVReader(new FileReader("src/data/polls.csv"))) {
+            reader.readNext();
+            String[] row;
+            while ((row = reader.readNext()) != null) {
+                if (row.length >= 3) {
+                    String idStr = row[0].replace("\"","").trim();
+                    if (idStr.equals(String.valueOf(pollId))) {
+                        return row[2].replace("\"","").trim();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public LocalDateTime getPollTime(int pollId) {
+        try (CSVReader reader = new CSVReader(new FileReader("src/data/polls.csv"))) {
+            String[] header = reader.readNext();
+            String[] row;
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            while ((row = reader.readNext()) != null) {
+                if (row.length >= 2) {
+                    String idStr = row[0].replace("\"","").trim();
+                    if (idStr.equals(String.valueOf(pollId))) {
+                        String timeStr = row[1].replace("\"","").trim();
+                        return LocalDateTime.parse(timeStr, fmt);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean isPollClosed(int pollId, PollValidator validator) {
+        try {
+            LocalDateTime when = getPollTime(pollId);
+            if (when != null) {
+                if (LocalDateTime.now().isAfter(when.plusMinutes(5))) {
+                    return true;
+                }
+            }
+            return validator.allUsersAnsweredAllQuestions(pollId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 }

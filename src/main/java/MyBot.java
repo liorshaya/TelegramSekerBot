@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.polls.PollAnswer;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MyBot extends TelegramLongPollingBot {
@@ -27,6 +28,8 @@ public class MyBot extends TelegramLongPollingBot {
     private final VotesCsvManager votesCsvManager = new VotesCsvManager();
 
     private final PollMapCsvManager pollMapCsvManager = new PollMapCsvManager();
+
+    private StatisticsPanel statisticsPanel;
 
 
     public String getBotToken(){
@@ -95,18 +98,22 @@ public class MyBot extends TelegramLongPollingBot {
 
         int selectedIndex = pollAnswer.getOptionIds().get(0); // single-select
 
-        // ✅ קודם מה-cache (עם המתנה קצרה למקרה שהמשתמש לחץ “מהר מדי”)
         String questionId = pollMapCsvManager.getFromCacheOrWait(telegramPollId, 1200, 100);
         if (questionId == null) {
             System.err.println("⚠️ לא נמצא מיפוי ל-pollId=" + telegramPollId + " — דילוג");
             return;
         }
 
-        // אימות רך שזו באמת שאלה של הסקר הפעיל
         int qPollId = pollManager.getPollIdFromQuestionId(questionId);
-        int active  = pollsCsvManager.getActivePollId();
-        if (qPollId != -1 && active != -1 && qPollId != active) {
-            System.out.println("ℹ️ הצבעה לשאלה " + questionId + " שאינה בסקר הפעיל (qPollId=" + qPollId + ", active=" + active + "). ממשיך.");
+        if (qPollId == -1) {
+            System.err.println("⚠️ לא נמצא pollId עבור questionId=" + questionId);
+            return;
+        }
+
+        if (pollsCsvManager.isPollClosed(qPollId, validator)) {
+            System.out.println("⛔ סקר " + qPollId + " כבר סגור (לוגית). מתעלם מתשובה לשאלה " + questionId);
+            pollsCsvManager.updatePollStatuses();
+            return;
         }
 
         votesCsvManager.recordVote(questionId, selectedIndex);
@@ -115,6 +122,15 @@ public class MyBot extends TelegramLongPollingBot {
         System.out.println("✅ הצבעה עודכנה: שאלה " + questionId + ", אופציה " + selectedIndex + " | סה\"כ קולות: " + total);
 
         pollsCsvManager.updatePollStatuses();
+
+        if (statisticsPanel != null) {
+            List<QuestionStats> updatedStats = StatisticsLoader.loadLatestPollStatistics();
+            statisticsPanel.refreshStatistics(updatedStats);
+        }
+    }
+
+    public void setStatisticsPanel(StatisticsPanel statisticsPanel) {
+        this.statisticsPanel = statisticsPanel;
     }
 
 

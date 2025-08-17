@@ -11,13 +11,16 @@ public class ManualOption extends JPanel {
     private final List<List<JTextField>> optionFields = new ArrayList<>();
     private final JCheckBox scheduleCheckbox;
     private final JSpinner timeSpinner;
+    private final StatisticsPanel statisticsPanel;
 
     UserManager userManager = new UserManager();
     PollsCsvManager pollsCsvManager = new PollsCsvManager();
     private final TelegramLongPollingBot bot;
 
-    public ManualOption(int x, int y, int width, int height, TelegramLongPollingBot bot) {
+    public ManualOption(int x, int y, int width, int height, TelegramLongPollingBot bot, StatisticsPanel statisticsPanel) {
         this.bot = bot;
+        this.statisticsPanel = statisticsPanel;
+
         setLayout(null);
         setBounds(x, y, width, height);
         setBackground(Color.ORANGE);
@@ -56,6 +59,8 @@ public class ManualOption extends JPanel {
                 System.out.println(csvData);
                 new PollManager().addPollWithQuestions(csvData, minutes, bot, userManager);
                 JOptionPane.showMessageDialog(this, "✅ Poll sent successfully!");
+                List<QuestionStats> updatedStats = StatisticsLoader.loadLatestPollStatistics();
+                statisticsPanel.refreshStatistics(updatedStats);
                 this.setVisible(false);
             } else {
                 JOptionPane.showMessageDialog(this,
@@ -97,13 +102,12 @@ public class ManualOption extends JPanel {
         for (int i = 0; i < questionFields.size(); i++) {
             String question = questionFields.get(i).getText().trim();
             List<JTextField> options = optionFields.get(i);
-            String[] answers = new String[4]; // נשמור תמיד 4 אופציות
+            String[] answers = new String[4];
 
             int filledCount = 0;
             for (int j = 0; j < 4; j++) {
                 String text = options.get(j).getText().trim();
                 if (!text.isEmpty()) {
-                    // בדיקה: אסור למלא את תשובה 3 בלי למלא 1 ו־2
                     if (j > 0 && answers[j - 1] == null) {
                         JOptionPane.showMessageDialog(this,
                                 "❌ Please fill options in order for Question " + (i + 1) +
@@ -113,7 +117,7 @@ public class ManualOption extends JPanel {
                     answers[j] = text;
                     filledCount++;
                 } else {
-                    answers[j] = ""; // חובה לשמור פסיק אפילו אם ריק
+                    answers[j] = "";
                 }
             }
 
