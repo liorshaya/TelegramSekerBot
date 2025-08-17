@@ -15,7 +15,7 @@ public class AiOption extends JPanel {
     public AiOption(int x, int y, int width, int height, TelegramLongPollingBot bot, StatisticsPanel statisticsPanel){
         this.setBounds(x, y, width, height);
         this.setLayout(null);
-        this.setBackground(new Color(0x6565DD));
+        this.setBackground(new Color(0x8080EA));
 
         this.bot = bot;
         this.userManager = new UserManager();

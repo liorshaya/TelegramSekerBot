@@ -23,7 +23,7 @@ public class ManualOption extends JPanel {
 
         setLayout(null);
         setBounds(x, y, width, height);
-        setBackground(Color.ORANGE);
+        setBackground(new Color(197, 144, 144));
 
         createQuestionBlock(1, 10, 10);
         createQuestionBlock(2, 10, 180);
