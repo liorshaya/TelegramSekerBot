@@ -22,16 +22,17 @@ Survey Bot is a **smart survey system** that combines **AI-generated questions**
 
 ```mermaid
 flowchart TD
-    A[Create Poll (manual/bot)]
-    A --> B[Save polls.csv + Map]
-    B --> C[Active Poll]
-    C --> D[Send to users.csv]
-    D --> E[User Votes]
-    E --> F[Handle Poll Answer]
-    F --> G{Poll open?\nAlready voted?}
-    G -->|No| H[Reject]
-    G -->|Yes| I[Record Vote\npoll_votes.csv + Map]
-    I --> J[Broadcast Updated Results]
+flowchart TD
+    A["Create Poll (manual/bot)"]
+    A --> B["Save polls.csv + Map"]
+    B --> C["Active Poll"]
+    C --> D["Send to users.csv"]
+    D --> E["User Votes"]
+    E --> F["Handle Poll Answer"]
+    F --> G{"Poll open?\nAlready voted?"}
+    G -->|No| H["Reject"]
+    G -->|Yes| I["Record Vote\npoll_votes.csv + Map"]
+    I --> J["Broadcast Updated Results"]
 ```
 
 ## 🧑‍💻 Tech Stack  
