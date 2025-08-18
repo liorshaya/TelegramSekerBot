@@ -22,7 +22,7 @@ Survey Bot is a **smart survey system** that combines **AI-generated questions**
 
 ```mermaid
 flowchart TD
-    A[Create Poll<br/>(manual/bot)]
+    A[Create Poll (manual/bot)]
     A --> B[Save polls.csv + Map]
     B --> C[Active Poll]
     C --> D[Send to users.csv]
