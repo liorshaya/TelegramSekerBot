@@ -19,25 +19,19 @@ Survey Bot is a **smart survey system** that combines **AI-generated questions**
 6. **Analytics** aggregates results into clean insights.  
 
 ## 🖼️ System Flow  
-[Create Poll] --(manualOption / bot)--> [Save to polls.csv + Map]
-        |
-        v
-   [Active Poll] --> [Send to users.csv]
-        |
-        v
-   [User Votes] --> [handlePollAnswer]
-        |
-        v
-[Validate (poll open? user voted?)]
-        |
-   +----+----+
-   |         |
-  No        Yes
-   |         |
- [Reject]   [Record Vote in poll_votes.csv + Update Map]
-                  |
-                  v
-         [Broadcast Updated Results]
+```mermaid
+flowchart TD
+
+    A[Create Poll] -->|manualOption / bot| B[Save to polls.csv + Map]
+    B --> C[Active Poll]
+    C --> D[Send to users.csv]
+    D --> E[User Votes]
+    E --> F[handlePollAnswer]
+    F --> G{Validate<br/>(poll open? user voted?)}
+
+    G -->|No| H[Reject]
+    G -->|Yes| I[Record Vote<br/>in poll_votes.csv + Update Map]
+    I --> J[Broadcast Updated Results]
 
 ## 🧑‍💻 Tech Stack  
 - **Java (Swing, OOP, Multithreading)**  
