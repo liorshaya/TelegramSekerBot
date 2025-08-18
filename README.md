@@ -19,19 +19,56 @@ Survey Bot is a **smart survey system** that combines **AI-generated questions**
 6. **Analytics** aggregates results into clean insights.  
 
 ## 🖼️ System Flow  
-```mermaid
-flowchart TD
+            +-------------------+
+            |    Create Poll    |
+            +-------------------+
+             (manualOption/bot)
+                     |
+                     v
+            +-------------------+
+            | Save to polls.csv |
+            |      + Map        |
+            +-------------------+
+                     |
+                     v
+            +-------------------+
+            |   Active Poll     |
+            +-------------------+
+                     |
+                     v
+            +-------------------+
+            | Send to users.csv |
+            +-------------------+
+                     |
+                     v
+            +-------------------+
+            |    User Votes     |
+            +-------------------+
+                     |
+                     v
+            +-------------------+
+            | handlePollAnswer  |
+            +-------------------+
+                     |
+                     v
+   +--------------------------------------+
+   | Validate (poll open? user already?)  |
+   +--------------------------------------+
+                 /          \
+                /            \
+             No/              \Yes
+              /                \
+             v                  v
+   +----------------+   +--------------------------------+
+   |     Reject     |   | Record Vote in poll_votes.csv  |
+   +----------------+   |   + Update Map                 |
+                        +--------------------------------+
+                                    |
+                                    v
+                        +----------------------------+
+                        | Broadcast Updated Results  |
+                        +----------------------------+
 
-    A[Create Poll] -->|manualOption / bot| B[Save to polls.csv + Map]
-    B --> C[Active Poll]
-    C --> D[Send to users.csv]
-    D --> E[User Votes]
-    E --> F[handlePollAnswer]
-    F --> G{Validate<br/>(poll open? user voted?)}
-
-    G -->|No| H[Reject]
-    G -->|Yes| I[Record Vote<br/>in poll_votes.csv + Update Map]
-    I --> J[Broadcast Updated Results]
 
 ## 🧑‍💻 Tech Stack  
 - **Java (Swing, OOP, Multithreading)**  
